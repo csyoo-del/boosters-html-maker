@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>BOOSTERS HTML MAKER</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root {
+    --ink: #000000;
+    --paper: #EEEEEE;
+    --line: #E5E5E5;
+    --accent: #45acf6;
+    --accent-soft: #dddddd;
+    --mono: "JetBrains Mono", "Courier New", monospace;
+    --serif: "Noto Sans KR", "Georgia", serif;
+    --sans: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 36px 24px 64px;
+  }
+
+  .layout {
+    display:flex;
+    
+    gap: 0px;
+    align-items: start;
+  }
+
+  .col-left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .col-right {
+    min-width: 0;
+    position: sticky;
+    top: 36px;
+  }
+
+  @media (max-width: 980px) {
+    .layout {
+      
+    }
+    .col-right {
+      position: static;
+    }
+    .col-left {
+      position: static;
+      height: auto;
+      overflow: visible;
+    }
+    .col-left .panel:last-child {
+      flex: none;
+    }
+    #noteDisplay {
+      flex: none;
+      min-height: 200px;
+      max-height: 400px;
+    }
+  }
+
+  header {
+    padding-bottom: 16px;
+    margin-bottom: 5px;
+    padding-left: 20px;
+  }
+
+  .eyebrow {
+    font-family: Noto sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 33px;
+    font-weight: 500;
+    margin: 0 0 6px;
+  }
+
+  .sub {
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px;
+  }
+
+  .panel-title {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .format-strip {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: #F5F5F5;
+    color: #737373;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.6;
+  }
+
+  .format-strip .fixed { color: #757575; }
+  .format-strip .variable {
+    color: #4AA781;
+    background: rgba(167, 236, 201, 0.53);
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+
+  .format-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .format-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: #F5F5F5;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .tab-btn:hover { border-color: var(--accent); }
+
+  .tab-btn.active {
+    background: #EAF9FF;
+    color: var(--ink);
+    border-color: #DCDDDD;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    resize: vertical;
+    background: #ffffff;
+    color: var(--ink);
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btn {
+    appearance: none;
+    border: none;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 13px;
+    padding: 11px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .btn-accent {
+    background: #1f1f1f;
+    color: #ffffff ;
+  }
+  .btn-accent:hover { background: #00843D; }
+
+  .btn-ghost {
+    background: #F6F6F6;
+    color: var(--ink);
+    border: 1px solid #E5E5E5;
+  }
+  .btn-ghost:hover { background: #EAF9FF; border-color: #E5E5E5; }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+
+  #noteArea {
+    min-height: 160px;
+  }
+
+  .preview-frame-wrap {
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: #ffffff;
+    overflow: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .preview-frame-wrap.is-mobile {
+    width: 390px;
+    max-width: 100%;
+    margin: 0 auto;
+    border-color: #E5E5E5;
+  }
+
+  #previewFrame {
+    width: 100%;
+    height: calc(100vh - 220px);
+    min-height: 520px;
+    border: none;
+    display: block;
+    background: #F6F6F6;
+  }
+
+  .device-tabs {
+    display: flex;
+    gap: 6px;
+  }
+
+  .device-tab-btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: #F6F6F6;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .device-tab-btn:hover { border-color: var(--accent); }
+
+  .device-tab-btn.active {
+    background: #EAF9FF;
+    color: #000000;
+    border-color: #C6E3EF;
+  }
+
+  .preview-panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: calc(100vh - 72px);
+  }
+
+  .preview-panel .preview-frame-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .preview-panel #previewFrame {
+    height: 100%;
+    min-height: 0;
+  }
+
+  @media (max-width: 980px) {
+    .preview-panel {
+      height: auto;
+    }
+    .preview-panel #previewFrame {
+      height: 70vh;
+    }
+  }
+
+  .preview-panel .count-row {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .preview-empty {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    text-align: center;
+    padding: 28px 0;
+  }
+
+  .count-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+
+  .count-badge {
+    font-family: var(--sans);
+    font-size: 11px;
+    background: #C7EAFC;
+    color: var(--ink);
+    padding: 2px 8px;
+    border-radius: 7px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: #C7EAFC;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .resizer{
+    width:8px;
+    cursor:col-resize;
+    background:#d7d7d7;
+    border-radius:4px;
+  }
+  .resizer:hover{background:#C9EFFE;}
+
+  #noteArea{
+    white-space:pre;
+    overflow:auto;
+  }
+
+
+.layout{align-items:flex-start;}
+.col-left{flex:0 0 50%;min-width:320px;position:sticky;top:36px;height:calc(100vh - 72px);display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+
+.col-right{flex:1;min-width:320px;}
+.col-left .panel:last-child{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.col-left .panel:last-child.overlay-mode{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  flex:none;
+  box-sizing:border-box;
+  border-radius:20px 20px 20px 20px;
+  box-shadow:0 -6px 32px rgba(0,0,0,0.15);
+  z-index:10;
+}
+
+/* ── 코드 삽입 툴바 ── */
+.insert-toolbar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding: 8px 10px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+.insert-toolbar.active {
+  display: flex;
+}
+.note-edit-hint {
+  font-size: 12px;
+  color: #888;
+  font-family: var(--sans);
+  padding: 6px 0 4px;
+  display: none;
+}
+.note-edit-hint.active {
+  display: block;
+}
+.insert-toolbar-label {
+  font-size: 11px;
+  color: #999;
+  font-family: var(--sans);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.insert-toolbar .tab-btn {
+  font-size: 11.5px;
+  padding: 5px 10px;
+}
+
+
+/* ── 최종 HTML 디스플레이 ── */
+#noteDisplay {
+  margin: 8px 0 0;
+  border-radius: 10px;
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  background: #282c34;
+}
+#noteDisplay code.hljs {
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  overflow-y: auto;
+  display: block;
+  white-space: pre;
+  padding: 16px;
+}
+#noteDisplay .nd-empty {
+  display: block;
+  padding: 16px;
+  color: #555;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-style: italic;
+  background: #282c34;
+  border-radius: 10px;
+}
+
+/* ── 인라인 코드 에디터 ── */
+#noteEditorWrap {
+  flex: 1;
+  min-height: 0;
+  display: none;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+#noteEditorWrap.active {
+  display: flex;
+}
+#noteEditorWrap .CodeMirror {
+  flex: 1;
+  height: 100% !important;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  border-radius: 10px;
+}
+#noteEditorWrap .CodeMirror-scroll {
+  padding-bottom: 12px;
+  overscroll-behavior: contain;
+}
+
+/* ── 스와이프 코드 편집 모달 ── */
+.swipe-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.swipe-modal-overlay.open {
+  display: flex;
+}
+.swipe-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 28px 22px;
+  width: min(860px, 95vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+.swipe-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.swipe-modal-title {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.swipe-modal-close {
+  appearance: none;
+  border: none;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background .15s, color .15s;
+}
+.swipe-modal-close:hover { background: #ffeaea; color: #e53935; }
+
+/* CodeMirror 에디터 영역 */
+.swipe-editor-wrap {
+  flex: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  min-height: 0;
+}
+.swipe-editor-wrap .CodeMirror {
+  height: 55vh;
+  min-height: 360px;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  border-radius: 10px;
+}
+.swipe-editor-wrap .CodeMirror-scroll {
+  padding-bottom: 12px;
+  overscroll-behavior: contain;
+}
+
+.swipe-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+
+
+
+/* ── 최종 HTML 패널 세로 리사이즈 ── */
+#notePanelResizer {
+  height: 8px;
+  margin: -20px -20px 8px -20px;
+  cursor: n-resize;
+  border-radius: 20px 20px 0 0;
+  background: transparent;
+  transition: background .15s;
+  flex-shrink: 0;
+  position: relative;
+}
+#notePanelResizer::after {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 3px;
+  background: #d0d0d0;
+  border-radius: 2px;
+  margin: 3px auto 0;
+  transition: background .15s;
+}
+#notePanelResizer:hover { background: rgba(69,172,246,0.12); }
+#notePanelResizer:hover::after { background: #45acf6; }
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>부스터스 HTML MAKER</h1>
+      <div class="sub">호스팅 서버 이미지 주소만 넣으면 정해진 형식으로 코드를 완성해 줍니다! 😁</div>
+    </header>
+
+    <div class="layout">
+      <div class="col-left">
+        <div class="panel">
+          <div class="panel-title"><i class="bi bi-grid-3x2-gap-fill"></i> 원하는 코드 타입을 선택하세요.</div>
+          <div class="format-tabs" id="formatTabs"></div>
+
+          <div class="panel-title"><i class="bi bi-code-slash"></i> 코드종류</div>
+          <pre class="format-strip" id="formatPreview"></pre>
+
+          <div class="panel-title"><i class="bi bi-server"></i> 호스팅 서버 주소 입력 (여러 장이면 한 줄에 하나씩)</div>
+          <textarea id="urls" placeholder="주소를 입력하고 버튼을누르면 여기에 결과가 나타나요."></textarea>
+
+          <div class="actions">
+            <button class="btn btn-accent" id="convertBtn">최종 HTML 주소변환</button>
+            <button class="btn btn-ghost" id="clearBtn">초기화</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div id="notePanelResizer"></div>
+          <div class="count-row">
+            <div class="panel-title" style="margin-bottom:0;"><i class="bi bi-file-earmark-code-fill"></i> 최종 HTML 주소 완성</div>
+            <span class="count-badge" id="noteCountBadge">0줄</span>
+          </div>
+
+          <div class="note-edit-hint" id="noteEditHint">추가하고 싶은 위치에 마우스 커서를 올려놓고 버튼을 누르세요.</div>
+          <div class="insert-toolbar" id="insertToolbar">
+            <span class="insert-toolbar-label">코드 추가 →</span>
+          </div>
+
+          <textarea id="noteArea" style="display:none;"></textarea>
+          <pre id="noteDisplay"><span class="nd-empty">생성된 코드가 여기에 표시됩니다</span></pre>
+
+          <div id="noteEditorWrap">
+            <textarea id="noteEditArea"></textarea>
+          </div>
+
+          <div class="actions" id="noteViewActions">
+            <button class="btn btn-accent" id="previewBtn">이미지 미리보기</button>
+            <button class="btn btn-ghost" id="noteCopyBtn">복사하기</button>
+            <button class="btn btn-ghost" id="noteEditBtn">수정하기</button>
+            <button class="btn btn-ghost" id="noteClearBtn">삭제</button>
+          </div>
+          <div class="actions" id="noteEditActions" style="display:none;">
+            <button class="btn btn-ghost" id="noteEditCancel">취소</button>
+            <button class="btn btn-accent" id="noteEditDone">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="resizer" id="resizer"></div>
+
+      <div class="col-right">
+        <div class="preview-panel">
+          <div class="count-row">
+            <div class="panel-title" style="margin-bottom:0;"><i class="bi bi-eye-fill"></i> 상세페이지 미리보기</div>
+            <div class="device-tabs" id="deviceTabs">
+              <button class="device-tab-btn active" data-device="pc" id="deviceTabPc">PC 화면</button>
+              <button class="device-tab-btn" data-device="mo" id="deviceTabMo">MO 화면</button>
+            </div>
+          </div>
+          <div class="preview-frame-wrap" id="previewFrameWrap">
+            <iframe id="previewFrame" title="상세페이지 미리보기"></iframe>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast">복사되었습니다</div>
+
+  <!-- 스와이프 코드 편집 모달 -->
+  <div class="swipe-modal-overlay" id="swipeModalOverlay">
+    <div class="swipe-modal">
+      <div class="swipe-modal-header">
+        <div class="swipe-modal-title" id="swipeModalTitle"><i class="bi bi-layers-fill"></i> 스와이프 코드 편집</div>
+        <button class="swipe-modal-close" id="swipeModalClose">✕</button>
+      </div>
+      <div class="swipe-editor-wrap">
+        <textarea id="swipeCodeArea"></textarea>
+      </div>
+      <div class="swipe-modal-actions">
+        <button class="btn btn-ghost" id="swipeModalCancel">취소</button>
+        <button class="btn btn-accent" id="swipeModalDone">완료 → HTML 코드 생성으로 이동</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+
+  <script>
+    // 형식을 추가하고 싶으면 이 FORMATS 객체에 새 항목만 추가하면 됩니다.
+    // key, label(버튼 이름), prefix/suffix(이미지 주소 앞뒤에 붙는 고정 문구)
+    const FORMATS = {
+      mixed: {
+        label: 'JPG+GIF 변환하기',
+        mixed: true
+      },
+      detail: {
+        label: 'JPG 코드변환',
+        prefix: '<img style="display: block;" src="',
+        suffix: '">'
+      },
+      gif: {
+        label: 'GIF 코드변환',
+        prefix: '<div class="videoArea" style="text-align:center;"><span class="fr-video fr-deletable" contenteditable="false">\n<video autoplay="autoplay" class="videoFull fr-draggable" loop="loop" muted="muted" playsinline="">\n<source src="',
+        suffix: '" type="video/mp4">\n</video>\n</span></div>'
+      }
+    };
+
+    // img와 video에 공통으로 적용할 사이즈/정렬 스타일. 결과 코드 맨 위에 한 번만 삽입됩니다.
+    const STYLE_BLOCK = '<style>\nimg, .videoFull {\n\tmax-width: 1000px;\n\twidth: 100%;\n\tmargin: 0 auto;\n\tdisplay: block;\n}\n</style>';
+
+    // 이 확장자들은 영상(video) 형식으로 변환됩니다. 나머지는 이미지(img) 형식으로 변환됩니다.
+    const VIDEO_EXTENSIONS = ['gif'];
+
+    function getExtension(url) {
+      const clean = url.split('?')[0].split('#')[0];
+      const match = clean.match(/\.([a-zA-Z0-9]+)$/);
+      return match ? match[1].toLowerCase() : '';
+    }
+
+    function isVideoUrl(url) {
+      return VIDEO_EXTENSIONS.includes(getExtension(url));
+    }
+
+    let currentFormatKey = 'mixed';
+
+    const urlsEl = document.getElementById('urls');
+    const toast = document.getElementById('toast');
+    const formatTabsEl = document.getElementById('formatTabs');
+    const formatPreviewEl = document.getElementById('formatPreview');
+    const convertBtn = document.getElementById('convertBtn');
+    const noteArea = document.getElementById('noteArea');
+    const noteCountBadge = document.getElementById('noteCountBadge');
+    const noteCopyBtn = document.getElementById('noteCopyBtn');
+    const noteClearBtn = document.getElementById('noteClearBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewFrame = document.getElementById('previewFrame');
+    const previewFrameWrap = document.getElementById('previewFrameWrap');
+    const deviceTabPc = document.getElementById('deviceTabPc');
+    const deviceTabMo = document.getElementById('deviceTabMo');
+
+    function escapeForHtmlAttr(str) {
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    }
+
+    function escapeForDisplay(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderTabs() {
+      formatTabsEl.innerHTML = '';
+      Object.keys(FORMATS).forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (key === currentFormatKey ? ' active' : '');
+        btn.dataset.formatKey = key;
+        btn.textContent = FORMATS[key].label;
+        btn.addEventListener('click', () => {
+          currentFormatKey = key;
+          // active 클래스만 갱신 — innerHTML 초기화 없이
+          formatTabsEl.querySelectorAll('[data-format-key]').forEach(b => {
+            b.classList.toggle('active', b.dataset.formatKey === key);
+          });
+          renderPreview();
+          convertBtn.textContent = FORMATS[key].label;
+        });
+        formatTabsEl.appendChild(btn);
+      });
+    }
+
+    function renderPreview() {
+      const fmt = FORMATS[currentFormatKey];
+      if (fmt.mixed) {
+        formatPreviewEl.innerHTML =
+          '<span class="fixed">jpg, png</span> <span class="variable">→ 이미지(img) 형식</span>\n'
+          + '<span class="fixed">gif</span> <span class="variable">→ 영상(video) 형식</span>\n'
+          + '<span class="fixed">확장자를 자동으로 인식해서 알맞은 형식으로 한 번에 변환합니다.</span>';
+        return;
+      }
+      formatPreviewEl.innerHTML =
+        '<span class="fixed">' + escapeForDisplay(fmt.prefix) + '</span>'
+        + '<span class="variable">이미지주소</span>'
+        + '<span class="fixed">' + escapeForDisplay(fmt.suffix) + '</span>'
+        ;
+    }
+
+    convertBtn.addEventListener('click', () => {
+      const fmt = FORMATS[currentFormatKey];
+      const raw = urlsEl.value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+      if (raw.length === 0) {
+        showToast('주소를 한 줄 이상 입력해주세요.');
+        return;
+      }
+
+      const pickFormat = (url) => {
+        if (!fmt.mixed) return fmt;
+        return isVideoUrl(url) ? FORMATS.gif : FORMATS.detail;
+      };
+
+      const codeLines = raw.map(url => {
+        const f = pickFormat(url);
+        const line = f.prefix + escapeForHtmlAttr(url) + f.suffix;
+        if (isVideoUrl(url)) return '<!---영상시작-->\n' + line + '\n<!--영상끝-->';
+        return line;
+      });
+      let fullCode = '<center>\n' + codeLines.join('\n') + '\n</center>';
+
+      // style 블록 중복 방지
+      if (noteArea.value.includes('.detail-img, .videoFull')) {
+        fullCode = fullCode.replace(STYLE_BLOCK + '\n', '');
+      }
+
+      const sep = noteArea.value.trim().length > 0 ? '\n' : '';
+      noteArea.value = noteArea.value + sep + fullCode;
+      updateNoteCount();
+      updateNoteDisplay();
+      showToast('코드가 추가되었습니다');
+    });
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+
+    const noteDisplayEl = document.getElementById('noteDisplay');
+
+    function updateNoteCount() {
+      const lines = noteArea.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      noteCountBadge.textContent = lines.length + '줄';
+    }
+
+    function updateNoteDisplay() {
+      const code = noteArea.value;
+      if (!code.trim()) {
+        noteDisplayEl.innerHTML = '<span class="nd-empty">생성된 코드가 여기에 표시됩니다</span>';
+      } else {
+        const codeEl = document.createElement('code');
+        codeEl.className = 'language-html';
+        codeEl.textContent = code;
+        noteDisplayEl.innerHTML = '';
+        noteDisplayEl.appendChild(codeEl);
+        hljs.highlightElement(codeEl);
+      }
+    }
+
+    function renderPreviewFrame() {
+      const code = noteArea.value.trim();
+      const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+      doc.open();
+      if (code.length === 0) {
+        doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;font-family:monospace;font-size:12.5px;color:#9C9C9C;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">미리보기</body></html>');
+      } else {
+        doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;padding:0;}img,video,.videoFull{max-width:min(100%,1000px);width:100%;display:block;margin:0 auto;}</style></head><body>' + code + '</body></html>');
+      }
+      doc.close();
+    }
+
+    previewBtn.addEventListener('click', () => {
+      renderPreviewFrame();
+      showToast('미리보기 업데이트');
+    });
+
+    noteCopyBtn.addEventListener('click', async () => {
+      const raw = noteArea.value || '';
+      try {
+        await navigator.clipboard.writeText(raw);
+      } catch (e) {
+        noteArea.select();
+        document.execCommand('copy');
+      }
+      showToast('복사되었습니다');
+    });
+
+    noteClearBtn.addEventListener('click', () => {
+      if (!noteArea.value.trim()) return;
+      if (!confirm('코드를 모두 삭제할까요?')) return;
+      noteArea.value = '';
+      updateNoteCount();
+      updateNoteDisplay();
+      renderPreviewFrame();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      urlsEl.value = '';
+      urlsEl.focus();
+    });
+
+    function switchDevice(device) {
+      if (device === 'mo') {
+        deviceTabMo.classList.add('active');
+        deviceTabPc.classList.remove('active');
+        previewFrameWrap.classList.add('is-mobile');
+      } else {
+        deviceTabPc.classList.add('active');
+        deviceTabMo.classList.remove('active');
+        previewFrameWrap.classList.remove('is-mobile');
+      }
+    }
+
+    deviceTabPc.addEventListener('click', () => switchDevice('pc'));
+    deviceTabMo.addEventListener('click', () => switchDevice('mo'));
+
+    renderTabs();
+    renderPreview();
+    updateNoteCount();
+    updateNoteDisplay();
+    renderPreviewFrame();
+    convertBtn.textContent = FORMATS[currentFormatKey].label;
+
+    /* ── 스와이프 코드 편집 탭 & 모달 (CodeMirror) ── */
+    const SWIPE_DEFAULT_CODE = `<style>
+\t.swiper-pdetail {
+\t\twidth: 100%;
+\t\tmax-width: 1000px;
+\t}
+
+\t.swiper-pdetail-slide img {
+\t\tmax-width: 100%;
+\t\theight: 100%;
+\t\tobject-fit: cover;
+\t}
+
+\t.swiper-pdetail-wrapper {
+\t\taspect-ratio: 16 / 20;
+\t}
+
+\t.swiper-pdetail-button-next,
+\t.swiper-pdetail-button-prev {
+\t\tborder-radius: 50%;
+\t\tdisplay: flex;
+\t\ttransform: translateY(-50%);
+\t}
+
+\t.swiper-pdetail-button-next {
+\t\tright: 10px;
+\t\tbackground: url('/web/upload/renew/icon_detail_next_arrow.png') no-repeat center;
+\t\twidth: 40px;
+\t\theight: 40px;
+\t\tbackground-size: 100% auto;
+\t\topacity: 0.5;
+\t}
+
+\t.swiper-pdetail-button-prev {
+\t\tleft: 10px;
+\t\tbackground: url('/web/upload/renew/icon_detail_prev_arrow.png') no-repeat center;
+\t\twidth: 40px;
+\t\theight: 40px;
+\t\tbackground-size: 100% auto;
+\t\topacity: 0.5;
+\t}
+
+\t.swiper-button-prev:after,
+\t.swiper-button-next:after {
+\t\tcontent: '' !important;
+\t}
+
+\t.videoFull {
+\t\tmax-width: 1000px;
+\t\twidth: 100%;
+\t\tmargin: 0 auto;
+\t\tdisplay: block;
+\t}
+</style>
+
+<!----------------세트 스와이프---------------->
+<img style="display: block;" src="스와이프 설명 이미지">
+<div class="swiper swiper-pdetail">
+\t<div class="swiper-wrapper swiper-pdetail-wrapper">
+\t\t<div class="swiper-slide swiper-pdetail-slide">
+\t\t\t<img src="이미지1" alt="Image 1">
+\t\t</div>
+\t\t<div class="swiper-slide swiper-pdetail-slide">
+\t\t\t<img src="이미지2" alt="Image 2">
+\t\t</div>
+\t\t<div class="swiper-slide swiper-pdetail-slide">
+\t\t\t<img src="이미지3" alt="Image 3">
+\t\t</div>
+\t</div>
+\t<!-- Add Arrows -->
+\t<div class="swiper-button-next swiper-pdetail-button-next">
+\t\t<br>
+\t</div>
+\t<div class="swiper-button-prev swiper-pdetail-button-prev">
+\t\t<br>
+\t</div>
+</div>
+<!----------------세트 스와이프---------------->`;
+
+    const TOGGLE_DEFAULT_CODE = `<!------------토글 시작------------>
+<div id="branden-toggle-btn" style="cursor: pointer;">
+\t<img style="display: block;" src="버튼이미지주소" alt="토글 버튼">
+</div>
+
+<div id="branden-toggle-content" style="display: none;">
+\t<img style="display: block;" src="이미지주소">
+</div>
+<!------------토글 끝------------>`;
+
+    const LANDING_DEFAULT_CODE = `<a href="랜딩할주소" target="_blank"><img style="display: block;" src="이미지주소"></a>`;
+
+    const swipeOverlay    = document.getElementById('swipeModalOverlay');
+    const swipeCodeArea   = document.getElementById('swipeCodeArea');
+    const swipeModalTitle = document.getElementById('swipeModalTitle');
+    const swipeModalClose = document.getElementById('swipeModalClose');
+    const swipeModalCancel = document.getElementById('swipeModalCancel');
+    const swipeModalDone  = document.getElementById('swipeModalDone');
+
+    let swipeEditor = null;
+    let swipeModalMode = 'swipe'; // 'swipe' | 'toggle' | 'landing'
+    let swipeCodeStored = null;
+    let toggleCodeStored = null;
+    let landingCodeStored = null;
+
+    function initSwipeEditor() {
+      if (swipeEditor) return;
+      swipeEditor = CodeMirror.fromTextArea(swipeCodeArea, {
+        mode: 'htmlmixed',
+        theme: 'monokai',
+        lineNumbers: true,
+        lineWrapping: false,
+        tabSize: 2,
+        indentWithTabs: true,
+        autofocus: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        autoCloseTags: true,
+        extraKeys: { 'Esc': closeSwipeModal }
+      });
+    }
+
+    function openSwipeModal(mode) {
+      swipeModalMode = mode;
+      const titles = {
+        swipe:   '<i class="bi bi-layers-fill"></i> 스와이프 코드 편집',
+        toggle:  '<i class="bi bi-toggle2-on"></i> 토글 코드 편집',
+        landing: '<i class="bi bi-box-arrow-up-right"></i> 랜딩 코드 편집'
+      };
+      const defaults = { swipe: SWIPE_DEFAULT_CODE, toggle: TOGGLE_DEFAULT_CODE, landing: LANDING_DEFAULT_CODE };
+      const stored = { swipe: swipeCodeStored, toggle: toggleCodeStored, landing: landingCodeStored };
+      swipeModalTitle.innerHTML = titles[mode];
+      swipeOverlay.classList.add('open');
+      initSwipeEditor();
+      swipeEditor.setValue(stored[mode] !== null ? stored[mode] : defaults[mode]);
+      setTimeout(() => { swipeEditor.refresh(); swipeEditor.focus(); }, 50);
+    }
+
+    // 스와이프 탭 버튼
+    (function addSwipeTab() {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn';
+      btn.id = 'swipeTabBtn';
+      btn.textContent = '스와이프 코드 편집';
+      btn.addEventListener('click', () => openSwipeModal('swipe'));
+      formatTabsEl.appendChild(btn);
+    })();
+
+    // 토글 탭 버튼
+    (function addToggleTab() {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn';
+      btn.id = 'toggleTabBtn';
+      btn.textContent = '토글 코드 편집';
+      btn.addEventListener('click', () => openSwipeModal('toggle'));
+      formatTabsEl.appendChild(btn);
+    })();
+
+    // 랜딩 탭 버튼
+    (function addLandingTab() {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn';
+      btn.id = 'landingTabBtn';
+      btn.textContent = '랜딩코드편집';
+      btn.addEventListener('click', () => openSwipeModal('landing'));
+      formatTabsEl.appendChild(btn);
+    })();
+
+    function closeSwipeModal() {
+      swipeOverlay.classList.remove('open');
+    }
+
+    swipeModalClose.addEventListener('click', closeSwipeModal);
+    swipeModalCancel.addEventListener('click', closeSwipeModal);
+
+    swipeOverlay.addEventListener('click', e => {
+      if (e.target === swipeOverlay) closeSwipeModal();
+    });
+
+    // 완료 → 현재 모드에 저장 후 noteArea에 삽입, HTML 코드생성으로 스크롤
+    swipeModalDone.addEventListener('click', () => {
+      if (!swipeEditor) { closeSwipeModal(); return; }
+      const fullVal = swipeEditor.getValue();
+      const code = fullVal.trim();
+      // 모드별 저장
+      if (swipeModalMode === 'swipe') swipeCodeStored = fullVal;
+      else if (swipeModalMode === 'toggle') toggleCodeStored = fullVal;
+      else landingCodeStored = fullVal;
+
+      if (code) {
+        const sep = noteArea.value.trim().length > 0 ? '\n' : '';
+        noteArea.value = noteArea.value + sep + code;
+        updateNoteCount();
+        updateNoteDisplay();
+        renderPreviewFrame();
+      }
+      closeSwipeModal();
+      const allPanels = document.querySelectorAll('.col-left .panel');
+      const htmlPanel = allPanels[1] || allPanels[0];
+      if (htmlPanel) {
+        htmlPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+
+    /* ── 코드 삽입 (수정 팝업 내 툴바) ── */
+    const INSERT_TYPES = [
+      { key:'mixed',   label:'JPG+GIF 변환', mode:'url',  title:'JPG+GIF 주소 변환'  },
+      { key:'jpg',     label:'JPG 코드변환',  mode:'url',  title:'JPG 주소 변환'       },
+      { key:'gif',     label:'GIF 코드변환',  mode:'url',  title:'GIF 주소 변환'       },
+      { key:'swipe',   label:'스와이프 코드', mode:'code', title:'스와이프 코드 편집'  },
+      { key:'toggle',  label:'토글 코드',     mode:'code', title:'토글 코드 편집'      },
+      { key:'landing', label:'랜딩 코드',     mode:'code', title:'랜딩 코드 편집'      },
+    ];
+
+    const insertToolbar = document.getElementById('insertToolbar');
+
+    function convertInsertUrls(type, raw) {
+      const urls = raw.split('\n').map(s => s.trim()).filter(Boolean);
+      return urls.map(url => {
+        if (type === 'gif' || (type === 'mixed' && isVideoUrl(url))) {
+          const converted = FORMATS.gif.prefix + url + FORMATS.gif.suffix;
+          return '<!---영상시작-->\n' + converted + '\n<!--영상끝-->';
+        }
+        return FORMATS.detail.prefix + url + FORMATS.detail.suffix;
+      }).join('\n');
+    }
+
+    function getInsertDefaultCode(type) {
+      if (type === 'swipe')   return (swipeCodeStored   !== null ? swipeCodeStored   : SWIPE_DEFAULT_CODE).trim();
+      if (type === 'toggle')  return (toggleCodeStored  !== null ? toggleCodeStored  : TOGGLE_DEFAULT_CODE).trim();
+      if (type === 'landing') return (landingCodeStored !== null ? landingCodeStored : LANDING_DEFAULT_CODE).trim();
+      return '';
+    }
+
+    function insertCode(editor, code) {
+      // <style>...</style> 블록은 <center> 위로, 나머지는 커서 위치에 삽입
+      const styleBlocks = [];
+      const nonStyleCode = code
+        .replace(/(<style[\s\S]*?<\/style>)/gi, (m) => { styleBlocks.push(m); return ''; })
+        .trim();
+
+      // 1) 비-style 코드 → 커서 위치에 삽입
+      if (nonStyleCode) {
+        const cursor = editor.getCursor();
+        editor.replaceRange(nonStyleCode + '\n', cursor);
+      }
+
+      // 2) <style> 블록 → 첫 번째 <center> 바로 위에 삽입
+      if (styleBlocks.length > 0) {
+        const styleCode = styleBlocks.join('\n');
+        const val = editor.getValue();
+        const centerIdx = val.toLowerCase().indexOf('<center');
+        if (centerIdx !== -1) {
+          editor.replaceRange(styleCode + '\n', editor.posFromIndex(centerIdx));
+        } else {
+          editor.replaceRange(styleCode + '\n', { line: 0, ch: 0 });
+        }
+      }
+    }
+
+    // 툴바 버튼 생성 — 팝업 없이 바로 삽입
+    (function initInsertToolbarButtons() {
+      INSERT_TYPES.forEach(td => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn';
+        btn.textContent = td.label;
+        btn.addEventListener('click', () => {
+          if (!noteEditEditor) return;
+          let code = '';
+          if (td.mode === 'url') {
+            const raw = prompt(td.title + '\n주소를 한 줄에 하나씩 입력하세요');
+            if (!raw || !raw.trim()) return;
+            code = convertInsertUrls(td.key, raw);
+          } else {
+            code = getInsertDefaultCode(td.key);
+          }
+          if (!code.trim()) return;
+          insertCode(noteEditEditor, code.trim());
+          showToast('코드가 삽입되었습니다');
+        });
+        insertToolbar.appendChild(btn);
+      });
+    })();
+
+
+    /* ── 최종 HTML 인라인 수정 (CodeMirror) ── */
+    const noteEditArea    = document.getElementById('noteEditArea');
+    const noteEditorWrap  = document.getElementById('noteEditorWrap');
+    const noteEditHint    = document.getElementById('noteEditHint');
+    const noteViewActions = document.getElementById('noteViewActions');
+    const noteEditActions = document.getElementById('noteEditActions');
+    const noteEditCancel  = document.getElementById('noteEditCancel');
+    const noteEditDone    = document.getElementById('noteEditDone');
+    const noteEditBtn     = document.getElementById('noteEditBtn');
+
+    let noteEditEditor = null;
+
+    function initNoteEditEditor() {
+      if (noteEditEditor) return;
+      noteEditEditor = CodeMirror.fromTextArea(noteEditArea, {
+        mode: 'htmlmixed',
+        theme: 'monokai',
+        lineNumbers: true,
+        lineWrapping: false,
+        tabSize: 2,
+        indentWithTabs: false,
+        smartIndent: false,
+        autofocus: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        autoCloseTags: true,
+        extraKeys: {
+          'Enter': function(cm) { cm.replaceSelection('\n'); }
+        }
+      });
+    }
+
+    function openNoteEdit() {
+      initNoteEditEditor();
+      noteEditEditor.setValue(noteArea.value);
+      noteDisplay.style.display = 'none';
+      noteEditorWrap.classList.add('active');
+      noteEditHint.classList.add('active');
+      insertToolbar.classList.add('active');
+      noteViewActions.style.display = 'none';
+      noteEditActions.style.display = 'flex';
+      setTimeout(() => {
+        noteEditEditor.refresh();
+        noteEditEditor.focus();
+      }, 50);
+    }
+
+    function closeNoteEdit(save) {
+      if (save && noteEditEditor) {
+        noteArea.value = noteEditEditor.getValue();
+        updateNoteCount();
+        updateNoteDisplay();
+        renderPreviewFrame();
+        showToast('저장되었습니다');
+      }
+      noteDisplay.style.display = '';
+      noteEditorWrap.classList.remove('active');
+      noteEditHint.classList.remove('active');
+      insertToolbar.classList.remove('active');
+      noteViewActions.style.display = '';
+      noteEditActions.style.display = 'none';
+      // 오버레이 모드 초기화
+      const notePanel = document.querySelector('.col-left .panel:last-child');
+      if (notePanel) {
+        notePanel.classList.remove('overlay-mode');
+        notePanel.style.top = '';
+        notePanel.style.flex = '';
+      }
+    }
+
+    noteEditBtn.addEventListener('click', openNoteEdit);
+    noteEditCancel.addEventListener('click', () => closeNoteEdit(false));
+    noteEditDone.addEventListener('click', () => closeNoteEdit(true));
+
+    /* ── 최종 HTML 패널 위쪽 드래그 리사이즈 (오버레이) ── */
+    (function initNotePanelResize() {
+      const resizeHandle = document.getElementById('notePanelResizer');
+      const notePanel    = document.querySelector('.col-left .panel:last-child');
+      const colLeft      = document.querySelector('.col-left');
+      if (!resizeHandle || !notePanel || !colLeft) return;
+
+      let startY = 0, startTop = 0;
+
+      // 처음 드래그 시 오버레이 모드 전환
+      function enterOverlayMode() {
+        if (notePanel.classList.contains('overlay-mode')) return;
+        const colH   = colLeft.getBoundingClientRect().height;
+        const panelH = notePanel.getBoundingClientRect().height;
+        const top    = colH - panelH - 10; // gap 포함
+        notePanel.style.top = Math.max(0, top) + 'px';
+        notePanel.classList.add('overlay-mode');
+      }
+
+      resizeHandle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        enterOverlayMode();
+        startY   = e.clientY;
+        startTop = parseInt(notePanel.style.top) || 0;
+        document.body.style.userSelect = 'none';
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+
+      function onMove(e) {
+        const dy     = e.clientY - startY;           // 위로 드래그 → dy 음수 → top 작아짐 → 패널 커짐
+        const colH   = colLeft.getBoundingClientRect().height;
+        const minTop = 0;                             // 상단까지 완전히 덮기 가능
+        const maxTop = colH - 160;                   // 최소 높이 160px
+        const newTop = Math.max(minTop, Math.min(maxTop, startTop + dy));
+        notePanel.style.top = newTop + 'px';
+        if (noteEditEditor) noteEditEditor.refresh();
+      }
+
+      function onUp() {
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        if (noteEditEditor) noteEditEditor.refresh();
+      }
+    })();
+
+
+const layoutEl=document.querySelector('.layout');
+const leftPanel=document.querySelector('.col-left');
+const resizer=document.getElementById('resizer');
+
+if(resizer){
+ let dragging=false;
+
+ resizer.addEventListener('mousedown',()=>dragging=true);
+
+ window.addEventListener('mouseup',()=>dragging=false);
+
+ window.addEventListener('mousemove',(e)=>{
+   if(!dragging || window.innerWidth<=980) return;
+
+   const rect=layoutEl.getBoundingClientRect();
+   const width=Math.max(320,Math.min(e.clientX-rect.left,rect.width-320));
+
+   leftPanel.style.flexBasis=width+'px';
+   localStorage.setItem('leftPanelWidth',width);
+ });
+
+ const saved=localStorage.getItem('leftPanelWidth');
+ if(saved) leftPanel.style.flexBasis=saved+'px';
+}
+
+
+  </script>
+</body>
+</html>
